@@ -1,0 +1,182 @@
+
+PumpData = table( ...
+    {'Mini Pump'; 'Small Pump'; 'Normal Pump'; 'Average Pump'; 'Medium Pump'; 'Large Pump'; 'Grand Pump'; ...
+    'Big Pump'; 'Massive Pump'; 'Huge Pump'; 'Great Pump'; 'Immense Pump'; 'Mighty Pump'; 'Stupendous Pump'; ...
+    'Vast Pump'; 'Gigantic Pump'; 'King Pump'}, ...
+    [3.95; 4.20; 6.95; 6.50; 7.45; 9.95; 9.75; 11.00; 12.20; 12.40; 14.10; 14.90; 16.10; 16.10; 17.90; 20.20; 24.20], ...
+    [3.01; 2.82; 4.04; 4.28; 4.51; 5.03; 5.15; 5.47; 5.69; 5.50; 6.48; 6.26; 4.74; 6.03; 8.16; 9.53; 12.80], ...
+    [2.1; 2.0; 3.3; 3.4; 3.8; 4.6; 4.5; 4.9; 5.2; 5.1; 5.9; 6.1; 7.4; 7.2; 8.5; 10.2; 11.3], ...
+    [14.3; 11.5; 17.2; 17.5; 18.9; 19.7; 20.7; 20.8; 21.3; 21.5; 22.4; 23.6; 20.0; 24.0; 22.5; 21.9; 21.6], ...
+    'VariableNames', {'Pump_Name', 'Pump_Base_Cost_M', 'Yearly_Maintenance_Cost_M', 'Power_Requirement_kW', 'Pump_Efficiency_Percent'});
+
+PipeData = table( ...
+    {'Tiny Pipe'; 'Smallish Pipe'; 'Standard Pipe'; 'Median Pipe'; 'Colossal Pipe'; 'Absurd Pipe'; 'Tremendous Pipe'; ...
+    'Giant Pipe'; 'Enormous Pipe'; 'Cosmic Pipe'; 'Mammoth Pipe'; 'Gargantuan Pipe'; 'Hefty Pipe'; 'Jumbo Pipe'; 'Epic Pipe'}, ...
+    [100; 142; 214; 247; 314; 388; 405; 483; 536; 553; 634; 727; 753; 876; 908], ...
+    [10; 11; 13; 13; 15; 20; 21; 29; 30; 29; 34; 45; 49; 64; 70], ...
+    [5; 7.3; 9.4; 10.9; 13.7; 16.9; 17.1; 19.8; 21.3; 21.4; 25.0; 27.9; 28.1; 29.0; 30.0], ...
+    'VariableNames', {'Pipe_Name', 'Cost_per_Foot_k', 'Yearly_Maintenance_Cost_k', 'Volumetric_Flow_Rate_barrels_per_minute'});
+
+ElectricityData = table( ...
+    {'12:00 AM – 3:00 AM'; '3:00 AM – 6:00 AM'; '6:00 AM – 9:00 AM'; '9:00 AM – 12:00 PM'; ...
+    '12:00 PM – 3:00 PM'; '3:00 PM – 6:00 PM'; '6:00 PM – 9:00 PM'; '9:00 PM – 12:00 AM'}, ...
+    [0.11; 0.10; 0.11; 0.13; 0.14; 0.15; 0.14; 0.12], ...
+    'VariableNames', {'Block_of_Hours', 'Electricity_Cost'});
+
+FilterData = table( ...
+    {'Lite Filter'; 'Plain Filter'; 'Power Filter'}, ...
+    [5.00; 10.00; 15.00], ...
+    [3; 6; 9], ...
+    'VariableNames', {'Filter', 'Cost_M', 'Social_Score'});
+
+
+
+
+
+% Equations
+
+% Mass of one barrel Equation
+% density of oil * volume
+% kg/barrel
+M1B = 800*0.15899;
+
+% Mass Flow rate out of pipe
+% (flow rate of pipe) * (mass of one barrel)
+PumpChoice = input("Pick a Pump Number: ");
+PipeChoice = input("Pick a Pipe Number: ");
+FilterChoice = input("Select a Filter Choice: ");
+
+% Filter Cost
+FilterCost = table2array(FilterData(FilterChoice,2));
+
+% Pump Base Cost
+PBC = table2array(PumpData(PumpChoice,3));
+
+% Pump Yearly Maintenance Cost
+PUYMC = table2array(PumpData(PumpChoice,3));
+
+% Volumetric Flow Rate
+VFR = table2array(PipeData(PipeChoice,4));
+
+% Pipe Cost Per Foot
+PCPF = table2array(PipeData(PipeChoice,2));
+
+% Pipe Yearly Maintenance Cost
+PIYMC = table2array(PipeData(PipeChoice,3));
+
+% Mass Flow Rate of Pipe
+MFRP = M1B*VFR;
+fprintf("Mass Flow Rate of Pipe in %.4f Kg/Min \n",MFRP);
+
+% Energy to get 1 barrel out of ground
+% (vol. flow rate)(mass of barrel)(gravity)(height)
+% N*m/min
+ER = (VFR*M1B*9.81*60.96)/1000;
+fprintf("Energy to get 1 barrel out of ground %.4f KJ/min \n",ER);
+
+
+% Power Out of Pump
+% (Power In)(Efficiency)
+EF = (table2array(PumpData(PumpChoice,5)))/100;
+PIP = table2array(PumpData(PumpChoice,4));
+POP = EF*PIP*60;
+fprintf("Power out of one pump is %.2f KJ/min, \n", POP);
+
+% Number of Pumps
+RNOP = ER/POP;
+fprintf("Recommended number of pumps is %.2f\n", RNOP);
+
+% Number of Pumps
+NOP = input("Input number of pumps wanted: ");
+
+% Total Power Out of Pumps
+TPOP = NOP*POP;
+
+% Total Power of Pumps
+fprintf("Total Power out of %.2f Pump(s) is %.4f KJ/min \n", NOP, TPOP);
+
+
+% How many Hours running
+TEC = 0;
+TEC2 = 0;
+NOH = input("Number of Hours running:");
+LoopNum = NOH/3;
+for i = 1:LoopNum
+    TH = input("Pick the Hour from the table: ");
+
+    % Grabs Electricity Cost
+    ElectricityCost=table2array(ElectricityData(TH,2));
+
+    % Cost of Electricity Per Pump Per Hour
+    COEP = ((POP/3600)*60);
+
+    % Total Cost of Electricity Per Pump Per 3 Hours
+    TCOEP = COEP*3;
+    
+    % Total Enery Cost is Total Cost Energy Per Pump * Electricity Cost
+    % * 365 Days * Number of Pumps
+    TEC = (TCOEP * ElectricityCost)*365*NOP;
+
+    % Total Energy Cost Per Year
+    TEC2 = TEC + TEC2;
+end
+
+% Barrels Produce Per Hour
+BPPH = (VFR*60);
+
+% Yearly Revenue
+YearlyRevenue = (19*NOH*BPPH*365);
+
+% Total Start Up Cost
+TotalStartUpCost = (FilterCost*1000000)+(PBC*1000000*NOP)+(PCPF*100000*200);
+
+% Yearly Maintenance Cost
+YearlyMaintenanceCost = (PUYMC*1000000*NOP)+(PIYMC*1000*200);
+
+% Yearly Profit
+YearlyProfit = YearlyRevenue-YearlyMaintenanceCost;
+
+if YearlyProfit < 0
+    disp("You are not making enough money to profit.")
+end
+
+HowManyYears = (TotalStartUpCost+TEC2)/YearlyProfit;
+
+
+
+
+
+
+
+
+%debt = 1
+%years = 1
+
+
+
+%while debt == 1
+ %       TotalCost = TotalStartUpCost+YearlyMaintenanceCost*years+(TEC2*years);
+  %      HowMuchDebt = TotalCost - YearlyRevenue;
+  %      years = years + 1
+   %     if HowMuchDebt < 0
+    %        debt = 0
+     %   end
+%end
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
